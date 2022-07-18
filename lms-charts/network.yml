@@ -1,0 +1,236 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: lms-als-file-watcher
+  name: lms-als-file-watcher
+  namespace: lms-lmsalsfilewatcher-prf1
+spec:
+  podSelector:
+    matchLabels:
+      app: lms-als-file-watcher
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - port: 80
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.36.51/32
+    - ports:
+        - port: 31100
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.6/32
+    - ports:
+        - port: 31101
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.6/32
+    - ports:
+        - port: 31102
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.6/32
+    - ports:
+        - port: 31103
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.6/32
+    - ports:
+        - port: 31104
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.6/32
+    - ports:
+        - port: 31105
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.6/32
+    - ports:
+        - port: 31100
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.7/32
+    - ports:
+        - port: 31101
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.7/32
+    - ports:
+        - port: 31102
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.7/32
+    - ports:
+        - port: 31103
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.7/32
+    - ports:
+        - port: 31104
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.7/32
+    - ports:
+        - port: 31105
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.7/32
+    - ports:
+        - port: 31100
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.8/32
+    - ports:
+        - port: 31101
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.8/32
+    - ports:
+        - port: 31102
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.8/32
+    - ports:
+        - port: 31103
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.8/32
+    - ports:
+        - port: 31104
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.8/32
+    - ports:
+        - port: 31105
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.8/32
+    - ports:
+        - port: 31100
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.9/32
+    - ports:
+        - port: 31101
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.9/32
+    - ports:
+        - port: 31102
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.9/32
+    - ports:
+        - port: 31103
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.9/32
+    - ports:
+        - port: 31104
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.9/32
+    - ports:
+        - port: 31105
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.9/32
+    - ports:
+        - port: 31100
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.10/32
+    - ports:
+        - port: 31101
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.10/32
+    - ports:
+        - port: 31102
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.10/32
+    - ports:
+        - port: 31103
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.10/32
+    - ports:
+        - port: 31104
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.10/32
+    - ports:
+        - port: 31105
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.10/32
+    - ports:
+        - port: 31100
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.11/32
+    - ports:
+        - port: 31101
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.11/32
+    - ports:
+        - port: 31102
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.11/32
+    - ports:
+        - port: 31103
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.11/32
+    - ports:
+        - port: 31104
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.11/32
+    - ports:
+        - port: 31105
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 10.168.37.11/32

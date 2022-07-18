@@ -1,0 +1,195 @@
+# Default values for cp-kafka.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## ------------------------------------------------------
+## Kafka
+## ------------------------------------------------------
+
+## Number of Kafka brokers
+brokers: 6
+
+## Image Info docker pull confluentinc/cp-kafka:6.0.2
+## ref: https://hub.docker.com/r/confluentinc/cp-kafka/
+image: container-registry01.nonprod.wsgc.com/integration/cp-kafka
+imageTag: 6.0.1.2wsi
+
+## Specify a imagePullPolicy
+## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+imagePullPolicy: IfNotPresent
+
+## Specify an array of imagePullSecrets.
+## Secrets must be manually created in the namespace.
+## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+imagePullSecrets:
+
+## StatefulSet Config
+## Start and stop pods in Parallel or OrderedReady (one-by-one.)
+## ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#pod-management-policy
+podManagementPolicy: OrderedReady
+
+## The StatefulSet Update Strategy which Kafka will use when changes are applied: OnDelete or RollingUpdate
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+updateStrategy: RollingUpdate
+
+## Kafka Server properties
+## ref: https://kafka.apache.org/documentation/#configuration
+configurationOverrides:
+  # "default.replication.factor": 3
+  # "min.insync.replicas": 2
+  # "auto.create.topics.enable": false
+
+  ## Options required for external access via NodePort
+  ## ref:
+  ## - http://kafka.apache.org/documentation/#security_configbroker
+  ## - https://cwiki.apache.org/confluence/display/KAFKA/KIP-103%3A+Separation+of+Internal+and+External+traffic
+  ##
+  ## Setting "advertised.listeners" here appends to "PLAINTEXT://${POD_IP}:9092,"
+  #listeners=SSL://$KAFKA_ADVERTISED_HOST_NAME:9093
+  "advertised.listeners": |-
+   EXTERNAL_SASL_PLAINTEXT://${HOST_IP}:$((31100 + ${KAFKA_BROKER_ID})),EXTERNAL_PLAINTEXT://${HOST_IP}:$((31080 + ${KAFKA_BROKER_ID})),EXTERNAL_SASL_SSL://${HOST_IP}:$((31090 + ${KAFKA_BROKER_ID})) 
+  "security.inter.broker.protocol": "SASL_PLAINTEXT"  #changed from SASL_SSL - try SSL
+  "listener.security.protocol.map": |-
+   SASL_PLAINTEXT:SASL_PLAINTEXT,EXTERNAL_SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL_PLAINTEXT:PLAINTEXT,SASL_SSL:SASL_SSL,EXTERNAL_SASL_SSL:SASL_SSL
+  "ssl.client.auth": "none"
+  "ssl.endpoint.identification.algorithm": ""
+  "listener.name.internal.ssl.endpoint.identification.algorithm": ""
+  "ssl.keystore.location": "/etc/kafka/secrets/kafka_lms_dev.jks"
+  "ssl.keystore.password": "importkey"
+  "ssl.truststore.location": "/etc/kafka/secrets/kafka.truststore.jks"
+  "ssl.truststore.password": "changeitKafk@"
+  "sasl.enabled.mechanisms": "PLAIN,SCRAM-SHA-512"
+  "sasl.mechanism.inter.broker.protocol": "SCRAM-SHA-512" 
+  "keystore_filename": "kafka_lms_dev.jks"
+  #"sun.security.krb5.debug": true"
+  "authorizer.class.name": "kafka.security.auth.SimpleAclAuthorizer"
+  "super.users": "User:admin;User:jenkins"
+  "auto.create.topics.enable": "false"
+  "delete.topic.enable": "true"
+  "log.retention.hours": "24"
+  "min.insync.replicas": "2"
+  "unclean.leader.election.enable": "true"
+  "offsets.topic.replication.factor": "3"
+  "default.replication.factor": "3"
+  "ssl.enabled.protocols": "TLSv1.2"
+  "jmx_opts": "-Dcom.sun.management.jmxremote=false -javaagent:/apps/prometheus/jmx_prometheus_javaagent-0.6.jar=7071:/apps/prometheus/jmx-exporter-kafka.yaml"
+  "opts": "-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf"
+  "zookeeper.session.timeout.ms": "12000"
+  "zookeeper_sasl_enabled": "FALSE"
+  #"log4j_root_loglevel": "debug"
+  "allow.everyone.if.no.acl.found": "false"
+
+
+## Useful if using any custom authorizer
+## Pass in some secrets to use (if required)
+secrets:
+  - name: kafkakeystore
+    mountPath: /etc/kafka/secrets
+    keys:
+      - kafka_lms_dev.jks
+      - kafka_lms_dev.txt
+      - kafka.truststore.jks
+      - kafka.truststore.txt
+  - name: kafkaserverjaas
+    mountPath: /etc/kafka/secrets
+    keys:
+      - kafka_server_jaas.conf
+  - name: jmx-exporter-kafka
+    mountPath: /apps/prometheus
+    keys:
+      - jmx-exporter-kafka.yaml
+
+## Additional env variables
+customEnv: {}
+  
+persistence:
+  enabled: true
+
+  ## The size of the PersistentVolume to allocate to each Kafka Pod in the StatefulSet. For
+  ## production servers this number should likely be much larger.
+  size: 45Gi
+
+  ## Kafka data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: "vsphere-disk"
+  disksPerBroker: 3
+
+## Kafka JVM Heap Option
+#heapOptions: "-Xms8G -Xmx8G -Djava.security.auth.login.config=/etc/kafka/jaas/kafka_server_jaas.conf"
+heapOptions: "-Xms6G -Xmx6G"
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+## Custom pod annotations
+podAnnotations:
+  #prometheus.io/port: "10254"
+  #prometheus.io/scrape: "true"
+  #co.elastic.metrics/raw: '[{"metricsets":["collector"],"module":"prometheus","namespace":"lms-kafka-dev","period":"10s","hosts":["${data.host}:5556"]},{"metricsets":["consumergroup","partition"],"module":"kafka","period":"10s","hosts":["${data.host}:9092"]}]'
+
+## Node labels for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+nodeSelector: {}
+
+## Taints to tolerate on node assignment:
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: {}
+
+## Monitoring
+## Kafka JMX Settings
+## ref: https://docs.confluent.io/current/kafka/monitoring.html
+jmx:
+  port: 7071
+
+## Prometheus Exporter Configuration
+## ref: https://prometheus.io/docs/instrumenting/exporters/
+prometheus:
+  ## JMX Exporter Configuration
+  ## ref: https://github.com/prometheus/jmx_exporter
+  jmx:
+    enabled: false
+    image: solsson/kafka-prometheus-jmx-exporter@sha256
+    imageTag: 6f82e2b0464f50da8104acd7363fb9b995001ddff77d248379f8788e78946143
+    port: 7071
+    ## Resources configuration for the JMX exporter container.
+    ## See the `resources` documentation above for details.
+    resources: {}
+
+nodeport:
+  enabled: true
+  servicePort: 19092
+  authservicePort: 19093
+  firstListenerPort: 31090
+  externalauthListenerPort: 31100
+  plaintextListenerPort: 31080
+  prometheusListenerPort: 31050
+
+## ------------------------------------------------------
+## Zookeeper
+## ------------------------------------------------------
+cp-zookeeper:
+  ## If true, install the cp-zookeeper chart alongside cp-kafka
+  ## ref: ../cp-zookeeper
+  enabled: false
+  servers: 3
+  persistence:
+    enabled: true
+    dataDirSize: 5Gi
+    dataLogDirSize: 5Gi
+
+  ## If the Zookeeper Chart is disabled a URL and port are required to connect
+  url: "lms-cp-zookeeper-dev:2181"

@@ -1,0 +1,32 @@
+{{- if .Values.nodeport.enabled }}
+  {{- $fullName := include "cp-zookeeper.fullname" . }}
+  {{- $servers := .Values.servers | int }}
+  {{- $root := . }}
+  {{- range $i, $e := until $servers }}
+    {{- $responsiblePod := printf "%s-%d" (printf "%s" $fullName) $i }}
+    {{- $externalPrometheusListenerPort := add $root.Values.nodeport.prometheusListenerPort $i }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $root.Release.Name }}-{{ $i }}-nodeport
+  labels:
+    app: {{ include "cp-zookeeper.name" $root }}
+    chart: {{ template "cp-zookeeper.chart" $root }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+    pod: {{ $responsiblePod }}
+spec:
+  type: NodePort
+  ports:
+    - name: external-prometheus-broker
+      port: {{ $root.Values.prometheus.jmx.port }}
+      targetPort: {{ $root.Values.prometheus.jmx.port }}
+      nodePort: {{ $externalPrometheusListenerPort }}
+      protocol: TCP
+  selector:
+    app: {{ include "cp-zookeeper.name" $root }}
+    release: {{ $root.Release.Name }}
+    statefulset.kubernetes.io/pod-name: {{ $responsiblePod | quote }}
+  {{- end }}
+{{- end }}

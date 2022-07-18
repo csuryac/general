@@ -1,0 +1,82 @@
+- name: Create kubernetes namespace
+  shell: kubectl create namespace logistics-kafka-perf
+  ignore_errors: true
+
+- name: "Push Kafka charts to /tmp"
+  copy: 
+    src: ./templates/
+    dest: /tmp/charts/
+
+#- name: Helm create Broker JKS Secrets
+kubectl create secret -n logistics-kafka-perf generic kafkakeystore --from-file="C:\\Users\\syerra1\\OneDrive - Williams-Sonoma Inc\\Certs\\kafkalms-nonprodwsgccom.jks" --from-file="C:\\Users\syerra1\\OneDrive - Williams-Sonoma Inc\\Certs\\kafka.truststore.jks"
+
+kubectl create secret -n logistics-kafka-perf generic kafkakeystore --from-file="C:\apps\portecle-1.11\kafka_lms_perf.jks" --from-file="C:\apps\portecle-1.11\kafka.truststore.jks"
+C:\apps\portecle-1.11\
+#  ignore_errors: true
+
+#  Remove secret with: kubectl delete secret  kafkaserverjaas -n logistics-kafka-perf if needing to replace
+#- name: Helm create Broker JAAS Secret
+kubectl create secret -n logistics-kafka-perf generic logistics-cp-zookeeper-perf-kafkaserverjaas --from-file=kafka_server_jaas.conf
+kubectl create secret -n logistics-kafka-perf generic kafkaserverjaas --from-file=kafka_server_jaas.conf
+#  ignore_errors: true
+
+- name: Create Kafka Prometheus JMX Exporter Secret
+  shell: kubectl create secret  -n logistics-kafka-perf generic jmx-exporter-kafka  --from-file=C:\Users\syerra1\'OneDrive - Williams-Sonoma Inc'\Kafka\iac-deploy-kafka-k8s-middleware-master\scripts\ansible-kubernetes-kubeadm-ha\roles\kafka-charts-lms-dev\templates\cp-kafka\jmx-exporter-kafka.yaml
+  kubectl create secret  -n logistics-kafka-perf generic jmx-exporter-kafka  --from-file=jmx-exporter-kafka.yaml
+  ignore_errors: true
+
+- name: Create Zookeeper Prometheus JMX Exporter Secret
+  kubectl create secret  -n logistics-kafka-perf generic jmx-exporter-zookeeper --from-file='C:\Users\syerra1\OneDrive - Williams-Sonoma Inc\Kafka\iac-deploy-kafka-k8s-middleware-master\scripts\ansible-kubernetes-kubeadm-ha\roles\kafka-charts-lms-perf\templates\cp-zookeper\jmx-exporter-zookeper.yaml'
+  kubectl create secret  -n logistics-kafka-perf generic jmx-exporter-kafka  --from-file=jmx-exporter-zookeeper.yaml
+  ignore_errors: true
+
+#- name: Helm install Zookeeper
+#  shell: /usr/local/bin/helm install --name cp-zookeeper-dev --namespace logistics-kafka-perf -f /tmp/charts/cp-zookeeper/values.yaml /tmp/charts/cp-zookeeper --tiller-namespace kube-tiller
+#  ignore_errors: true
+
+- name: Helm upgrade Zookeeper
+
+   helm install  logistics-cp-zookeeper-perf --namespace logistics-kafka-perf -f values.yaml .
+
+
+   helm uninstall logistics-cp-zookeeper-perf
+  ignore_errors: true
+  helm uninstall logistics-cp-kafka-perf -n logistics-kafka-perf
+  helm uninstall lms-cp-kafka-dev -n lms-kafka-dev
+#- name: Helm install Kafka Broker
+ cd 'C:\Users\syerra1\OneDrive - Williams-Sonoma Inc\Kafka\iac-deploy-kafka-k8s-middleware-master\scripts\ansible-kubernetes-kubeadm-ha\roles\kafka-charts-lms-perf\templates\cp-kafka'
+ helm install --dry-run --debug logistics-cp-zookeeper-perf --namespace logistics-kafka-perf -f values.yaml .
+#  ignore_errors: true
+ helm install   logistics-cp-zookeeper-perf --namespace logistics-kafka-perf -f values.yaml .
+
+  helm install   logistics-cp-kafka-perf --namespace logistics-kafka-perf -f values.yaml .
+  helm install --dry-run --debug   logistics-cp-kafka-perf --namespace logistics-kafka-perf -f values.yaml .
+kubectl port-forward pods/lms-cp-kafka-dev-0 7000:30180
+
+helm upgrade   lms-cp-kafka-dev --namespace lms-kafka-dev -f values.yaml .
+  helm upgrade --dry-run --debug   lms-cp-kafka-dev --namespace lms-kafka-dev -f values.yaml .
+
+    helm upgrade --dry-run --debug   logistics-cp-kafka-perf --namespace logistics-kafka-perf -f values.yaml .
+helm upgrade    logistics-cp-kafka-perf --namespace logistics-kafka-perf -f values.yaml .
+
+ helm install    lms-cp-kafka-dev --namespace lms-kafka-dev -f values.yaml .
+  kubectl get po -n lms-kafka-dev 
+
+
+- name: Helm upgrade Kafka Broker
+  shell: /usr/local/bin/helm upgrade cp-kafka-dev --namespace logistics-kafka-perf -f /tmp/charts/cp-kafka/values.yaml /tmp/charts/cp-kafka --tiller-namespace kube-tiller
+  ignore_errors: true
+
+KAFKA_OPTS="-Djava.security.auth.login.config=/etc/kafka/secrets/broker2_jaas.conf -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf -Dsun.security.krb5.debug=true" \
+    confluentinc/cp-kafka:3.3.0
+
+
+    helm upgrade --namespace=lms-kafka-dev -i kafdrop chart --set image.tag=latest --set kafka.brokerConnect=rk.qa.kafka.logistics.wsgc.com:80 --set kafka.properties="$(cat .\chart\kafka.properties )"  --set jvm.opts="-Xms32M -Xmx64M"
+
+    helm uninstall kafdrop --namespace=lms-kafka-dev
+
+    helm upgrade -i kafdrop chart --set image.tag=3.x.x \
+    --set kafka.brokerConnect=<host:port,host:port> \
+    --set kafka.properties="$(cat kafka.properties | base64)" \
+    --set kafka.truststore="$(cat kafka.truststore.jks | base64)" \
+    --set kafka.keystore="$(cat kafka.keystore.jks | base64)"
