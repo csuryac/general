@@ -1,0 +1,54 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kube-ingress-nginx
+bases:
+- https://github.wsgc.com/TS-ContainerServices/k8s-platform-addons-base/ingress-nginx/base/
+resources:
+- namespace.yaml
+- secret.yaml
+images:
+  - name: container-registry01.nonprod.wsgc.com/system/alpine
+    newName: container-registry01.nonprod.wsgc.com/system/alpine
+    newTag: "3.9"
+  - name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+    newName: container-registry01.nonprod.wsgc.com/system/nginx-ingress-controller
+    newTag: "0.30.0"
+configMapGenerator:
+- name: nginx-configuration
+  namespace: ingress-nginx
+  behavior: merge
+  envs:
+    - configs.env
+generatorOptions:
+  disableNameSuffixHash: true
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-ingress-controller
+    namespace: ingress-nginx
+  spec:
+    replicas: 6
+    template:
+      spec:
+        nodeSelector:
+          edge: "true"
+        containers:
+        - name: nginx-ingress-controller
+          livenessProbe:
+            initialDelaySeconds: 180
+- |-
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: ingress-nginx
+    namespace: ingress-nginx
+  spec:
+    type: NodePort
+    ports:
+      - name: https
+        port: 443
+        targetPort: 443
+        nodePort: 30443
+        protocol: TCP

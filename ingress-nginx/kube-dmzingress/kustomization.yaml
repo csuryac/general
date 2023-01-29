@@ -1,0 +1,99 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kube-dmzingress-nginx
+bases:
+- https://github.wsgc.com/TS-ContainerServices/k8s-platform-addons-base/ingress-nginx/base/
+resources:
+- namespace.yaml
+images:
+  - name: container-registry01.nonprod.wsgc.com/system/alpine
+    newName: container-registry01.nonprod.wsgc.com/system/alpine
+    newTag: "3.9"
+  - name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+    newName: container-registry01.nonprod.wsgc.com/system/nginx-ingress-controller
+    newTag: "0.30.0"
+configMapGenerator:
+- name: nginx-configuration
+  namespace: ingress-nginx
+  behavior: merge
+  envs:
+    - configs.env
+generatorOptions:
+  disableNameSuffixHash: true
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-ingress-controller
+    namespace: ingress-nginx
+  spec:
+    template:
+      spec:
+        tolerations:
+          - key: networkzone
+            operator: "Equal"
+            value: "dmz"
+            effect: NoSchedule
+        nodeSelector:
+          networkzone: dmz
+        containers:
+        - name: nginx-ingress-controller
+          args:
+          - /nginx-ingress-controller
+          - --configmap=$(POD_NAMESPACE)/nginx-configuration
+          - --publish-service=$(POD_NAMESPACE)/ingress-nginx
+          - --annotations-prefix=nginx.ingress.kubernetes.io
+          - --ingress-class=dmznginx
+          - --disable-catch-all
+- |-
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: ingress-nginx
+    namespace: ingress-nginx
+  spec:
+    type: NodePort
+    ports:
+      - name: https
+        port: 443
+        targetPort: 443
+        nodePort: 30444
+        protocol: TCP
+- |-
+  apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: Role
+  metadata:
+    name: nginx-ingress-role
+    namespace: ingress-nginx
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - configmaps
+        - pods
+        - secrets
+        - namespaces
+      verbs:
+        - get
+    - apiGroups:
+        - ""
+      resources:
+        - configmaps
+      resourceNames:
+        - "ingress-controller-leader-dmznginx"
+      verbs:
+        - get
+        - update
+    - apiGroups:
+        - ""
+      resources:
+        - configmaps
+      verbs:
+        - create
+    - apiGroups:
+        - ""
+      resources:
+        - endpoints
+      verbs:
+        - get

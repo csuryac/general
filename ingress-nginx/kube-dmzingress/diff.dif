@@ -1,0 +1,30 @@
+diff -u -N /tmp/LIVE-353861263/v1.ConfigMap.kube-dmzingress-nginx.nginx-configuration /tmp/MERGED-326260386/v1.ConfigMap.kube-dmzingress-nginx.nginx-configuration
+--- /tmp/LIVE-353861263/v1.ConfigMap.kube-dmzingress-nginx.nginx-configuration	2021-09-30 10:17:41.512968649 -0700
++++ /tmp/MERGED-326260386/v1.ConfigMap.kube-dmzingress-nginx.nginx-configuration	2021-09-30 10:17:41.516968689 -0700
+@@ -10,7 +10,8 @@
+   skip-access-log-urls: /nginx_status
+   ssl-ciphers: ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
+   upstream-keepalive-connections: "128"
+-  worker-shutdown-timeout: 240s
++  upstream-keepalive-timeout: "300"
++  worker-shutdown-timeout: 330s
+ kind: ConfigMap
+ metadata:
+   annotations:
+@@ -33,6 +34,7 @@
+         f:skip-access-log-urls: {}
+         f:ssl-ciphers: {}
+         f:upstream-keepalive-connections: {}
++        f:upstream-keepalive-timeout: {}
+         f:worker-shutdown-timeout: {}
+       f:metadata:
+         f:annotations:
+@@ -44,7 +46,7 @@
+           f:app.kubernetes.io/part-of: {}
+     manager: kubectl-client-side-apply
+     operation: Update
+-    time: "2020-10-28T21:09:11Z"
++    time: "2021-09-30T17:17:41Z"
+   name: nginx-configuration
+   namespace: kube-dmzingress-nginx
+   resourceVersion: "61350901"
