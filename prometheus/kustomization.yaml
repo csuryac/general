@@ -1,0 +1,77 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kube-prometheus
+bases:
+- https://github.wsgc.com/TS-ContainerServices/k8s-platform-addons-base/prometheus/base/
+resources:
+- ./ingress.yaml
+images:
+  - name: prom/node-exporter
+    #newName: container-registry01.nonprod.wsgc.com/system/node-exporter
+    newTag: v1.0.1
+  - name: prom/prometheus
+    newTag: v2.28.1
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: prometheus-server
+  files:
+  - prometheus.yml
+secretGenerator:
+- name: etcd-healthcheck-ca
+  files:
+  - etcd-healthcheck-client.crt
+  - etcd-healthcheck-client.key
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: prometheus-server
+    namespace: kube-prometheus
+  spec:
+    template:
+      spec:
+        containers:
+          - name: prometheus-server
+            volumeMounts:
+              - name: etcd-healthcheck-ca
+                mountPath: /opt/prometheus/secrets
+        volumes:
+        - name: etcd-healthcheck-ca
+          secret:
+            defaultMode: 420
+            secretName: etcd-healthcheck-ca
+- |-
+  apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    name: prometheus-node-exporter
+    namespace: kube-prometheus
+  spec:
+    template:
+      spec:
+        tolerations:
+        - effect: NoSchedule
+          operator: "Exists"
+        containers:
+          - name: prometheus-node-exporter
+            args:
+              - --path.procfs=/host/proc
+              - --path.sysfs=/host/sys
+              - --web.listen-address=:9100
+              - --collector.processes
+              - --no-collector.hwmon
+              - --no-collector.infiniband
+              - --no-collector.ipvs
+              - --no-collector.mdadm
+              - --no-collector.nfsd
+              - --no-collector.powersupplyclass
+              - --no-collector.rapl
+              - --no-collector.textfile
+              - --no-collector.thermal_zone
+              - --no-collector.xfs
+              - --no-collector.zfs
+            ports:
+              - name: metrics
+                containerPort: 9100
